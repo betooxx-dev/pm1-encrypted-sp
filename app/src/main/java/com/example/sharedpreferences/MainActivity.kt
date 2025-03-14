@@ -29,16 +29,13 @@ import java.util.*
 
 class MainActivity : ComponentActivity(), LocationListener {
 
-    // Variables para el manejo de ubicación
     private lateinit var locationManager: LocationManager
     private val locationPermissionCode = 2
 
-    // Variables para el tiempo de uso
     private var startTime: Long = 0
     private var totalUsageTime: Long = 0
     private var isFirstRun = true
 
-    // Variables para mantener el estado de la aplicación
     private var userName by mutableStateOf("")
     private var isDarkMode by mutableStateOf(false)
     private var selectedLanguageIndex by mutableIntStateOf(0)
@@ -47,12 +44,10 @@ class MainActivity : ComponentActivity(), LocationListener {
     private var lastLocation by mutableStateOf("Desconocida")
     private var totalUsageTimeText by mutableStateOf("00:00:00")
 
-    // Clave maestra para encriptación
     private val masterKeyAlias by lazy {
         MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
     }
 
-    // SharedPreferences encriptadas
     private val encryptedSharedPreferences by lazy {
         EncryptedSharedPreferences.create(
             "encrypted_user_prefs",
@@ -66,17 +61,13 @@ class MainActivity : ComponentActivity(), LocationListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Cargar preferencias guardadas
         loadPreferences()
 
-        // Registrar la hora de inicio para calcular el tiempo de uso
         startTime = System.currentTimeMillis()
 
-        // Inicializar el LocationManager
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         setContent {
-            // Aplicar tema según la preferencia de modo oscuro
             AppTheme(darkTheme = isDarkMode) {
                 UserPreferencesScreen()
             }
@@ -88,27 +79,20 @@ class MainActivity : ComponentActivity(), LocationListener {
     fun UserPreferencesScreen() {
         val context = LocalContext.current
 
-        // Lista de idiomas disponibles
         val languages = listOf("Español", "English", "Français", "Deutsch", "Italiano")
 
-        // Estado para el TextField del nombre de usuario
         var userNameState by remember { mutableStateOf(userName) }
 
-        // Estado para el Switch de modo oscuro
         var darkModeState by remember { mutableStateOf(isDarkMode) }
 
-        // Estado para el dropdown de idiomas
         var expandedDropdown by remember { mutableStateOf(false) }
 
-        // Estado para el slider de volumen
         var volumeState by remember { mutableFloatStateOf(notificationVolume.toFloat()) }
 
-        // Solicitar permiso de ubicación usando el enfoque moderno de Compose
         val requestPermissionLauncher = rememberLauncherForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { isGranted: Boolean ->
             if (isGranted) {
-                // Permiso concedido, obtener ubicación
                 if (ContextCompat.checkSelfPermission(
                         context,
                         Manifest.permission.ACCESS_FINE_LOCATION
@@ -134,7 +118,6 @@ class MainActivity : ComponentActivity(), LocationListener {
             }
         }
 
-        // Efecto para solicitar permisos al iniciar
         LaunchedEffect(Unit) {
             if (ContextCompat.checkSelfPermission(
                     context,
@@ -166,14 +149,12 @@ class MainActivity : ComponentActivity(), LocationListener {
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Título
                 Text(
                     text = "Perfil de Usuario (Datos Encriptados)",
                     fontSize = 24.sp,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
 
-                // Nombre de usuario
                 Text(text = "Nombre de usuario:")
                 TextField(
                     value = userNameState,
@@ -181,7 +162,6 @@ class MainActivity : ComponentActivity(), LocationListener {
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Tema oscuro
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -196,7 +176,6 @@ class MainActivity : ComponentActivity(), LocationListener {
                     )
                 }
 
-                // Idioma preferido
                 Text(text = "Idioma preferido:")
                 ExposedDropdownMenuBox(
                     expanded = expandedDropdown,
@@ -228,7 +207,6 @@ class MainActivity : ComponentActivity(), LocationListener {
                     }
                 }
 
-                // Volumen de notificaciones
                 Text(text = "Volumen de notificaciones: ${volumeState.toInt()}%")
                 Slider(
                     value = volumeState,
@@ -238,23 +216,17 @@ class MainActivity : ComponentActivity(), LocationListener {
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Información sobre último acceso
                 Text(text = "Último acceso: $lastAccess")
 
-                // Información sobre última ubicación
                 Text(text = "Última ubicación: $lastLocation")
 
-                // Información sobre tiempo total de uso
                 Text(text = "Tiempo total de uso: $totalUsageTimeText")
 
-                // Botón para guardar preferencias
                 Button(
                     onClick = {
-                        // Actualizar variables
                         userName = userNameState
                         isDarkMode = darkModeState
                         notificationVolume = volumeState.toInt()
-                        // Guardar preferencias
                         savePreferences()
                         Toast.makeText(
                             context,
@@ -272,33 +244,24 @@ class MainActivity : ComponentActivity(), LocationListener {
 
     private fun loadPreferences() {
         try {
-            // Cargar nombre de usuario
             userName = encryptedSharedPreferences.getString("userName", "") ?: ""
 
-            // Cargar modo oscuro
             isDarkMode = encryptedSharedPreferences.getBoolean("darkMode", false)
 
-            // Cargar idioma preferido
             selectedLanguageIndex = encryptedSharedPreferences.getInt("language", 0)
 
-            // Cargar volumen de notificaciones
             notificationVolume = encryptedSharedPreferences.getInt("volume", 50)
 
-            // Cargar última fecha y hora de acceso
             lastAccess = encryptedSharedPreferences.getString("lastAccess", "Nunca") ?: "Nunca"
 
-            // Cargar última ubicación
             lastLocation = encryptedSharedPreferences.getString("lastLocation", "Desconocida") ?: "Desconocida"
 
-            // Cargar tiempo total de uso
             totalUsageTime = encryptedSharedPreferences.getLong("totalUsageTime", 0)
             updateTotalUsageTimeDisplay()
 
-            // Actualizar la fecha y hora de acceso actual
             val currentDateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
             val currentDate = currentDateFormat.format(Date())
 
-            // Guardar la fecha actual como último acceso solo si no es la primera ejecución
             if (!isFirstRun) {
                 val editor = encryptedSharedPreferences.edit()
                 editor.putString("lastAccess", currentDate)
@@ -308,7 +271,6 @@ class MainActivity : ComponentActivity(), LocationListener {
                 isFirstRun = false
             }
         } catch (e: Exception) {
-            // En caso de error al desencriptar, mostrar un mensaje y usar valores predeterminados
             Toast.makeText(
                 this,
                 "Error al cargar preferencias: ${e.message}",
@@ -321,31 +283,24 @@ class MainActivity : ComponentActivity(), LocationListener {
         try {
             val editor = encryptedSharedPreferences.edit()
 
-            // Guardar nombre de usuario
             editor.putString("userName", userName)
 
-            // Guardar modo oscuro
             editor.putBoolean("darkMode", isDarkMode)
 
-            // Guardar idioma preferido
             editor.putInt("language", selectedLanguageIndex)
 
-            // Guardar volumen de notificaciones
             editor.putInt("volume", notificationVolume)
 
-            // Guardar fecha y hora de acceso actual
             val currentDateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
             val currentDate = currentDateFormat.format(Date())
             editor.putString("lastAccess", currentDate)
             lastAccess = currentDate
 
-            // Actualizar y guardar el tiempo total de uso
             updateTotalUsageTime()
             editor.putLong("totalUsageTime", totalUsageTime)
 
             editor.apply()
         } catch (e: Exception) {
-            // En caso de error al encriptar, mostrar un mensaje
             Toast.makeText(
                 this,
                 "Error al guardar preferencias: ${e.message}",
@@ -355,12 +310,10 @@ class MainActivity : ComponentActivity(), LocationListener {
     }
 
     override fun onLocationChanged(location: Location) {
-        // Actualizar la última ubicación conocida
         val locationText = "Lat: ${location.latitude}, Long: ${location.longitude}"
         lastLocation = locationText
 
         try {
-            // Guardar la ubicación en las preferencias encriptadas
             val editor = encryptedSharedPreferences.edit()
             editor.putString("lastLocation", locationText)
             editor.apply()
@@ -375,14 +328,12 @@ class MainActivity : ComponentActivity(), LocationListener {
 
     override fun onPause() {
         super.onPause()
-        // Actualizar y guardar el tiempo total de uso cuando la aplicación pasa a segundo plano
         updateTotalUsageTime()
         savePreferences()
     }
 
     override fun onResume() {
         super.onResume()
-        // Reiniciar el contador de tiempo cuando la aplicación vuelve a primer plano
         startTime = System.currentTimeMillis()
         loadPreferences()
     }
@@ -396,7 +347,6 @@ class MainActivity : ComponentActivity(), LocationListener {
     }
 
     private fun updateTotalUsageTimeDisplay() {
-        // Convertir milisegundos a formato legible
         val seconds = (totalUsageTime / 1000) % 60
         val minutes = (totalUsageTime / (1000 * 60)) % 60
         val hours = (totalUsageTime / (1000 * 60 * 60))
@@ -404,7 +354,6 @@ class MainActivity : ComponentActivity(), LocationListener {
         totalUsageTimeText = String.format("%02d:%02d:%02d", hours, minutes, seconds)
     }
 
-    // Métodos vacíos requeridos por LocationListener
     override fun onProviderEnabled(provider: String) {}
     override fun onProviderDisabled(provider: String) {}
     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
