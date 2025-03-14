@@ -63,7 +63,3 @@ com.example.sharedpreferences/
 - La aplicación almacena todos los datos de forma local y encriptada
 - Se requieren permisos de ubicación para la funcionalidad completa
 - La primera vez que se ejecuta la aplicación, se generan nuevas claves de encriptación
-
-## 📄 Licencia
-
-Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
